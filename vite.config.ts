@@ -10,7 +10,7 @@ export default defineConfig(({ command }) => {
 
   if (command !== 'serve') {
     // https://blog.devgenius.io/how-to-deploy-your-vite-react-app-to-github-pages-with-and-without-react-router-b060d912b10e
-    config.base = '/goit-react-hw-01-components/'
+    config.base = '/goit-react-hw-02-phonebook/'
   }
 
   return config
