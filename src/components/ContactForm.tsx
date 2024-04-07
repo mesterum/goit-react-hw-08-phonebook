@@ -1,21 +1,26 @@
 import PropTypes from "prop-types";
-import { PureComponent } from "react";
+import { createRef, PureComponent } from "react";
 import styled from "styled-components";
+import { Contact } from "./App";
 
 const Form = styled.form`
   border: solid currentColor 1px;
   padding: 0.5em;
 `
+type Form = HTMLFormElement & {
+  elements: Record<"name" | "number", HTMLInputElement>
+}
 const FormElement = styled.div`
   display: flex;
   flex-direction: column;
   margin-bottom: 1em;
 `;
 
-type Props = { addContact: (name: string, number: string) => void }
+type Props = { addContact: (name: string, number: string, id?: string) => boolean }
 type State = {
   name: string,
-  number: string
+  number: string,
+  id: string
 };
 export default class ContactForm extends PureComponent<Props, State> {
   // static defaultProps = {};
@@ -23,27 +28,39 @@ export default class ContactForm extends PureComponent<Props, State> {
     addContact: PropTypes.func.isRequired
   };
 
-  state = {
+  static initState: State = {
     name: '',
-    number: ''
+    number: '',
+    id: ''
   }
+  state = ContactForm.initState;
 
-  handleSubmit = (evt: React.FormEvent<HTMLFormElement &
-  {
-    elements: Record<"name" | "number", HTMLInputElement>
-  }>) => {
+  updateContact = (contact: Contact) => {
+    this.setState(contact);
+    this.form.current?.reset();
+    this.form.current?.elements.number.focus();
+  }
+  form = createRef<Form>();
+
+  handleSubmit = (evt: React.FormEvent<Form>) => {
     evt.preventDefault();
     const form = evt.currentTarget;
     const name = form.elements.name.value;
     const number = form.elements.number.value;
     console.log(name, number);
-    this.props.addContact(name, number);
+    if (!this.props.addContact(name, number, this.state.id)) {
+      alert(`${name} is already in contacts`);
+      return;
+    }
+    if (this.state.id) {
+      this.setState(ContactForm.initState);
+    }
     form.reset();
   };
 
   render() {
     return (
-      <Form onSubmit={this.handleSubmit}>
+      <Form onSubmit={this.handleSubmit} ref={this.form}>
         <FormElement>
           <label htmlFor="name">Name</label>
           <input
@@ -54,6 +71,7 @@ export default class ContactForm extends PureComponent<Props, State> {
             pattern="^[a-zA-Z]+(([' \-][a-zA-Z ])?[a-zA-Z]*)*$"
             title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
             required
+            autoComplete="off"
           />
         </FormElement>
         <FormElement>

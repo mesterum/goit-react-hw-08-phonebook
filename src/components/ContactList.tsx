@@ -5,7 +5,7 @@ import styled from "styled-components";
 type Props = {
   contacts: Contact[],
   filter: string,
-  updateContact: (contact: Contact) => void
+  updateContact?: (contact: Contact) => void
   deleteContact: (contact: Contact) => void
 };
 const Number = styled.span`
@@ -16,9 +16,10 @@ export default function ContactList(props: Props) {
   return (
     <ul>
       {props.contacts.map(contact => (contact.name.toLowerCase().includes(lowerCaseFilter) &&
-        <li key={contact.id} onClick={() => props.updateContact(contact)}>
+        <li key={contact.id}>
           {contact.name}: <Number>{contact.number}</Number>
           <button onClick={() => props.deleteContact(contact)}>Delete</button>
+          <button onClick={() => props.updateContact?.(contact)}>Update</button>
         </li>
       ))}
     </ul>

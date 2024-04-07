@@ -31,16 +31,19 @@ export default class App extends Component<Props, State> {
   }
 
   contactForm = createRef<ContactForm>();
-  updateContact = ({ name, number }: Contact) =>
-    this.contactForm.current?.setState({ name, number });
 
   deleteContact = (contact: Contact) => {
+    if (this.contactForm.current?.state.id === contact.id) return;
     const newContacts = this.state.contacts.filter(c => c.id !== contact.id);
     this.setState({ contacts: newContacts });
   }
-  addContact = (name: string, number: string) => {
-    const newContacts = this.state.contacts.concat({ id: nanoid(8), name, number });
+  addContact = (name: string, number: string, id?: string): boolean => {
+    if (this.state.contacts.some(c => c.name === name && c.id !== id)) return false;
+    const newContacts = id
+      ? this.state.contacts.map(c => c.id === id ? { ...c, name, number } : c)
+      : this.state.contacts.concat({ id: nanoid(8), name, number });
     this.setState({ contacts: newContacts });
+    return true;
   }
   setFilter = (filter: string) => this.setState({ filter });
 
@@ -53,9 +56,11 @@ export default class App extends Component<Props, State> {
         <h2>Contacts</h2>
         <Filter filter={this.state.filter} setFilter={this.setFilter} />
         <ContactList contacts={this.state.contacts} filter={this.state.filter}
-          updateContact={this.updateContact} deleteContact={this.deleteContact} />
+          updateContact={this.contactForm.current?.updateContact} deleteContact={this.deleteContact} />
       </div>
     )
   }
+  // For the contactForm reference to update
+  componentDidMount() { this.setState({}) }
 }
 
