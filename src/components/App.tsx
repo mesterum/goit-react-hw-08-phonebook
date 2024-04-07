@@ -1,14 +1,18 @@
+import './App.css'
 import { Component, createRef } from "react";
 import ContactForm from "./ContactForm";
 import ContactList from "./ContactList";
+import Filter from './Filter';
+import { nanoid } from 'nanoid/non-secure'
 
+export type Contact = {
+  id: string,
+  name: string,
+  number: string
+}
 type Props = Record<string, never>;
-export type State = {
-  contacts: {
-    id: string,
-    name: string,
-    number: string
-  }[],
+type State = {
+  contacts: Contact[],
   filter: string
 };
 
@@ -27,24 +31,29 @@ export default class App extends Component<Props, State> {
   }
 
   contactForm = createRef<ContactForm>();
-  updateContactForm = (name: string, number: string) =>
+  updateContact = ({ name, number }: Contact) =>
     this.contactForm.current?.setState({ name, number });
 
-  addContact = (name: string, number: string) => {
-    const newContacts = this.state.contacts.concat({ id: "TODO", name, number });
+  deleteContact = (contact: Contact) => {
+    const newContacts = this.state.contacts.filter(c => c.id !== contact.id);
     this.setState({ contacts: newContacts });
   }
+  addContact = (name: string, number: string) => {
+    const newContacts = this.state.contacts.concat({ id: nanoid(8), name, number });
+    this.setState({ contacts: newContacts });
+  }
+  setFilter = (filter: string) => this.setState({ filter });
 
   render() {
-    //   const filteredContacts = this.state.contacts.filter(contact => contact.name.toLowerCase().includes(this.state.filter.toLowerCase()))
     return (
       <div>
         <h2>Phonebook</h2>
         {<ContactForm addContact={this.addContact} ref={this.contactForm} />}
 
         <h2>Contacts</h2>
-        {/* <Filter ... /> */}
-        <ContactList contacts={this.state.contacts} updateContactForm={this.updateContactForm} />
+        <Filter filter={this.state.filter} setFilter={this.setFilter} />
+        <ContactList contacts={this.state.contacts} filter={this.state.filter}
+          updateContact={this.updateContact} deleteContact={this.deleteContact} />
       </div>
     )
   }

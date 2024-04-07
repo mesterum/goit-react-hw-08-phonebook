@@ -1,13 +1,23 @@
 import PropTypes from "prop-types";
-import { Component } from "react";
+import { PureComponent } from "react";
+import styled from "styled-components";
+
+const Form = styled.form`
+  border: solid currentColor 1px;
+  padding: 0.5em;
+`
+const FormElement = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1em;
+`;
 
 type Props = { addContact: (name: string, number: string) => void }
 type State = {
   name: string,
   number: string
 };
-
-export default class ContactForm extends Component<Props, State> {
+export default class ContactForm extends PureComponent<Props, State> {
   // static defaultProps = {};
   static propTypes = {
     addContact: PropTypes.func.isRequired
@@ -33,8 +43,8 @@ export default class ContactForm extends Component<Props, State> {
 
   render() {
     return (
-      <form onSubmit={this.handleSubmit}>
-        <div>
+      <Form onSubmit={this.handleSubmit}>
+        <FormElement>
           <label htmlFor="name">Name</label>
           <input
             type="text"
@@ -45,8 +55,8 @@ export default class ContactForm extends Component<Props, State> {
             title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
             required
           />
-        </div>
-        <div>
+        </FormElement>
+        <FormElement>
           <label htmlFor="number">Number</label>
           <input
             type="tel"
@@ -57,11 +67,11 @@ export default class ContactForm extends Component<Props, State> {
             title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
             required
           />
-        </div>
+        </FormElement>
         <div>
           <button type="submit">Add contact</button>
         </div>
-      </form>
+      </Form>
     )
   }
 }
