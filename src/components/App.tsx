@@ -56,11 +56,18 @@ export default class App extends Component<Props, State> {
         <h2>Contacts</h2>
         <Filter filter={this.state.filter} setFilter={this.setFilter} />
         <ContactList contacts={this.state.contacts} filter={this.state.filter}
-          updateContact={this.contactForm.current?.updateContact} deleteContact={this.deleteContact} />
+          updateContact={this.updateContact} deleteContact={this.deleteContact} />
       </div>
     )
   }
   // For the contactForm reference to update
-  componentDidMount() { this.setState({}) }
+  // componentDidMount() { this.setState({}) }
+  updateContact = (c: Contact) => {
+    if (this.contactForm.current) {
+      this.updateContact = this.contactForm.current.updateContact
+      this.updateContact(c)
+      this.setState({})
+    }
+  }
 }
 

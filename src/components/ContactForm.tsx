@@ -36,8 +36,12 @@ export default class ContactForm extends PureComponent<Props, State> {
   state = ContactForm.initState;
 
   updateContact = (contact: Contact) => {
+    if (this.state.id === contact.id) {
+      this.setState(ContactForm.initState);
+      return
+    }
     this.setState(contact);
-    this.form.current?.reset();
+    // this.form.current?.reset();
     this.form.current?.elements.number.focus();
   }
   form = createRef<Form>();
@@ -87,7 +91,7 @@ export default class ContactForm extends PureComponent<Props, State> {
           />
         </FormElement>
         <div>
-          <button type="submit">Add contact</button>
+          <button type="submit">{this.state.id ? "Update" : "Add"} contact</button>
         </div>
       </Form>
     )
