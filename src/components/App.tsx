@@ -33,7 +33,8 @@ export default class App extends Component<Props, State> {
   contactForm = createRef<ContactForm>();
 
   deleteContact = (contact: Contact) => {
-    if (this.contactForm.current?.state.id === contact.id) return;
+    if (this.contactForm.current?.state.id === contact.id)
+      this.contactForm.current.setState({ id: '' });
     const newContacts = this.state.contacts.filter(c => c.id !== contact.id);
     this.setState({ contacts: newContacts });
   }

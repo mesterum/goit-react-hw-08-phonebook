@@ -56,9 +56,9 @@ export default class ContactForm extends PureComponent<Props, State> {
       alert(`${name} is already in contacts`);
       return;
     }
-    if (this.state.id) {
-      this.setState(ContactForm.initState);
-    }
+    // if (this.state.id) {
+    this.setState(ContactForm.initState);
+    // }
     form.reset();
   };
 
