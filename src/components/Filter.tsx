@@ -7,7 +7,7 @@ export default function Filter(props: Props) {
   return (
     <label>
       Find contacts by name<br />
-      <input value={props.filter} onChange={e => props.setFilter(e.target.value)} />
+      <input value={props.filter} onChange={e => props.setFilter(e.target.value)} id="search" />
     </label>
   )
 }

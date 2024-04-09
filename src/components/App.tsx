@@ -4,6 +4,7 @@ import ContactForm from "./ContactForm";
 import ContactList from "./ContactList";
 import Filter from './Filter';
 import { nanoid } from 'nanoid/non-secure'
+import { db } from '../db';
 
 export type Contact = {
   id: string,
@@ -36,6 +37,7 @@ export default class App extends Component<Props, State> {
     if (this.contactForm.current?.state.id === contact.id)
       this.contactForm.current.setState({ id: '' });
     const newContacts = this.state.contacts.filter(c => c.id !== contact.id);
+    db.contacts.delete(contact.id);
     this.setState({ contacts: newContacts });
   }
   addContact = (name: string, number: string, id?: string): boolean => {
@@ -43,6 +45,7 @@ export default class App extends Component<Props, State> {
     const newContacts = id
       ? this.state.contacts.map(c => c.id === id ? { ...c, name, number } : c)
       : this.state.contacts.concat({ id: nanoid(8), name, number });
+    db.contacts.put(id ? { id, name, number } : newContacts.at(-1)!);
     this.setState({ contacts: newContacts });
     return true;
   }
@@ -62,7 +65,6 @@ export default class App extends Component<Props, State> {
     )
   }
   // For the contactForm reference to update
-  // componentDidMount() { this.setState({}) }
   updateContact = (c: Contact) => {
     if (this.contactForm.current) {
       this.updateContact = this.contactForm.current.updateContact
@@ -70,5 +72,10 @@ export default class App extends Component<Props, State> {
       this.setState({})
     }
   }
+  async componentDidMount() {
+    const contacts = await db.contacts.toArray();
+    if (contacts.length) this.setState({ contacts });
+  }
+
 }
 
