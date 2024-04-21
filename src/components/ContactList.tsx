@@ -1,25 +1,35 @@
 import PropTypes from "prop-types";
-import { Contact } from "./App";
+import { PhoneBook } from "../PhoneBook";
 import styled from "styled-components";
+import { db } from "../db";
+import { useEffect } from "react";
 
 type Props = {
-  contacts: Contact[],
   filter: string,
-  updateContact: (contact: Contact) => void
-  deleteContact: (contact: Contact) => void
+  phoneBook: PhoneBook
 };
 const Number = styled.span`
   font-size: 1.13em;
 `
-export default function ContactList(props: Props) {
-  const lowerCaseFilter = props.filter.toLowerCase()
+export default function ContactList({ filter, phoneBook }: Props) {
+  const contacts = phoneBook.useStore('contacts')
+  useEffect(() => {
+    db.contacts.toArray(contacts => {
+      if (contacts.length) phoneBook.contacts.dispatch(["set", contacts])
+    });
+    // db.contacts.on('add', (contact: Contact) => {
+    //   contactsDispatch(['add', contact])
+    // });
+  }, []);
+
+  const lowerCaseFilter = filter.toLowerCase()
   return (
     <ul>
-      {props.contacts.map(contact => (contact.name.toLowerCase().includes(lowerCaseFilter) &&
+      {contacts.map(contact => (contact.name.toLowerCase().includes(lowerCaseFilter) &&
         <li key={contact.id}>
           {contact.name}: <Number>{contact.number}</Number>
-          <button onClick={() => props.deleteContact(contact)}>Delete</button>
-          <button onClick={() => props.updateContact(contact)}>Update</button>
+          <button onClick={() => phoneBook.deleteContact(contact)}>Delete</button>
+          <button onClick={() => phoneBook.updateContact(contact)}>Update</button>
         </li>
       ))}
     </ul>
@@ -27,11 +37,6 @@ export default function ContactList(props: Props) {
 }
 
 ContactList.propTypes = {
-  contacts: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      number: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
+  filter: PropTypes.string.isRequired,
+  phoneBook: PropTypes.instanceOf(PhoneBook)
 };
