@@ -20,7 +20,7 @@ export default function ContactList({ filter, phoneBook }: Props) {
     // db.contacts.on('add', (contact: Contact) => {
     //   contactsDispatch(['add', contact])
     // });
-  }, []);
+  }, [phoneBook.contacts]);
 
   const lowerCaseFilter = filter.toLowerCase()
   return (

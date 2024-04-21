@@ -1,6 +1,6 @@
 // db.ts
 import Dexie, { Table } from 'dexie';
-import { Contact } from './components/App';
+import { Contact } from './PhoneBook';
 
 export class ContactsDexie extends Dexie {
   contacts!: Table<Contact, string>;
