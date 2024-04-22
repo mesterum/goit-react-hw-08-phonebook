@@ -18,39 +18,39 @@ type States = {
   contacts: Contact[]
   form: Contact
 }
-type Reducers = {
-  contacts: React.Reducer<States["contacts"], Actions["contacts"]>
-  form: React.Reducer<States["form"], Actions["form"]>
+type Reducers = { [K in keyof Actions]: React.Reducer<States[K], Actions[K]> }
+
+type Part<K extends keyof Actions> = {
+  dispatch: React.Dispatch<Actions[K]>
+  state: States[K]
+  reducer: Reducers[K]
+  initState: States[K]
 }
 
 export class PhoneBook {
   constructor() {
     this.handleSubmit = this.handleSubmit.bind(this);
+
+    db.contacts.toArray(contacts => {
+      if (contacts.length) this.contacts.dispatch(["set", contacts])
+    });
+    // db.contacts.on('add', (contact: Contact) => {
+    //   contactsDispatch(['add', contact])
+    // });
   }
 
-  contacts: {
-    dispatch: React.Dispatch<Actions['contacts']>
-    state: States['contacts']
-    reducer: Reducers['contacts']
-    initState: States['contacts']
-  } = {
-      dispatch: () => { },
-      reducer: reducers.contacts,
-      initState: initStates.contacts,
-      state: initStates.contacts
-    }
-
-  form: {
-    dispatch: React.Dispatch<Actions['form']>
-    reducer: Reducers['form']
-    initState: States['form']
-    state: States['form']
-  } = {
-      dispatch: () => { },
-      reducer: reducers.form,
-      initState: initStates.form,
-      state: initStates.form
-    }
+  contacts: Part<'contacts'> = {
+    dispatch(/* a */) { /* this.initState = this.reducer(this.initState, a) */ },
+    reducer: reducers.contacts,
+    initState: initStates.contacts,
+    state: initStates.contacts
+  }
+  form: Part<'form'> = {
+    dispatch: () => { },
+    reducer: reducers.form,
+    initState: initStates.form,
+    state: initStates.form
+  }
   deleteContact(contact: Contact) {
     if (this.form.state === contact)
       this.form.dispatch(['update', { ...contact, id: '' }]);
@@ -83,7 +83,7 @@ export class PhoneBook {
   }
   useStore<K extends keyof States>(key: K): PhoneBook[K]["state"] {
     const part = this[key];
-    const [state, dispatch] = useReducer(part.reducer, initStates[key]);
+    const [state, dispatch] = useReducer(part.reducer, part.initState);
     useEffect(() => {
       part.dispatch = dispatch;
     }, [part])
@@ -93,18 +93,15 @@ export class PhoneBook {
 }
 
 const reducers: Reducers = {
-  contacts(state: States["contacts"], action: Actions["contacts"]): States["contacts"] {
+  contacts(state, action) {
     switch (action[0]) {
-      case 'delete':
-        {
-          const { id } = action[1];
-          db.contacts.delete(id);
-          return state.filter(c => c.id !== id)
-        }
+      case 'delete': {
+        const { id } = action[1];
+        db.contacts.delete(id);
+        return state.filter(c => c.id !== id)
+      }
       case 'add': {
         const { id, name, number } = action[1];
-        // const { id } = state;
-
         const newContacts = id
           ? state.map(c => c.id === id ? { ...c, name, number } : c)
           : state.concat({ id: nanoid(8), name, number });
@@ -117,7 +114,7 @@ const reducers: Reducers = {
         return state;
     }
   },
-  form(state: States["form"], action: Actions["form"]): States["form"] {
+  form(state, action) {
     switch (action[0]) {
       case 'update':
         return state === action[1] ? initStates.form : action[1];

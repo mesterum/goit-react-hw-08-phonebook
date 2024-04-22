@@ -1,8 +1,6 @@
 import PropTypes from "prop-types";
 import { PhoneBook } from "../PhoneBook";
 import styled from "styled-components";
-import { db } from "../db";
-import { useEffect } from "react";
 
 type Props = {
   filter: string,
@@ -13,15 +11,6 @@ const Number = styled.span`
 `
 export default function ContactList({ filter, phoneBook }: Props) {
   const contacts = phoneBook.useStore('contacts')
-  useEffect(() => {
-    db.contacts.toArray(contacts => {
-      if (contacts.length) phoneBook.contacts.dispatch(["set", contacts])
-    });
-    // db.contacts.on('add', (contact: Contact) => {
-    //   contactsDispatch(['add', contact])
-    // });
-  }, [phoneBook.contacts]);
-
   const lowerCaseFilter = filter.toLowerCase()
   return (
     <ul>

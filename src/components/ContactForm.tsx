@@ -20,8 +20,7 @@ const FormElement = styled.div`
 type Props = { phoneBook: PhoneBook }
 
 function ContactForm({ phoneBook }: Props) {
-  const { formEl } = phoneBook;
-  const { handleSubmit } = phoneBook
+  const { formEl, handleSubmit } = phoneBook;
   const state = phoneBook.useStore('form')
 
   return (
