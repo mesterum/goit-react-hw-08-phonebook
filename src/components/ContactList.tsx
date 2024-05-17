@@ -1,6 +1,8 @@
 import PropTypes from "prop-types";
 import { PhoneBook } from "../PhoneBook";
 import styled from "styled-components";
+import { selectContacts } from "../features/phoneBook/contactsSlice";
+import { useAppSelector } from "../app/hooks";
 
 type Props = {
   filter: string,
@@ -10,7 +12,7 @@ const Number = styled.span`
   font-size: 1.13em;
 `
 export default function ContactList({ filter, phoneBook }: Props) {
-  const contacts = phoneBook.useStore('contacts')
+  const contacts = useAppSelector(selectContacts);
   const lowerCaseFilter = filter.toLowerCase()
   return (
     <ul>

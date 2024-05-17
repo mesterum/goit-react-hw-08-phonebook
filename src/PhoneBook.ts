@@ -1,9 +1,10 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 
-import { nanoid } from 'nanoid/non-secure'
 import { db } from './db';
 import { Form } from "./components/ContactForm";
 import { createRef, useEffect, useReducer } from 'react';
+import { type AppThunk, store } from './app/store';
+import { addContactA, deleteContactA, selectContacts, setContactsA } from './features/phoneBook/contactsSlice';
 
 export type Contact = {
   id: string,
@@ -11,11 +12,9 @@ export type Contact = {
   number: string
 }
 type Actions = {
-  contacts: ['delete', Contact] | ["set", Contact[]] | ['add', Contact]
   form: ['update', Contact] | ['reset']
 }
 type States = {
-  contacts: Contact[]
   form: Contact
 }
 type Reducers = { [K in keyof Actions]: React.Reducer<States[K], Actions[K]> }
@@ -32,19 +31,10 @@ export class PhoneBook {
     this.handleSubmit = this.handleSubmit.bind(this);
 
     db.contacts.toArray(contacts => {
-      if (contacts.length) this.contacts.dispatch(["set", contacts])
+      store.dispatch(setContactsA(contacts.length ? contacts : defaultContacts))
     });
-    // db.contacts.on('add', (contact: Contact) => {
-    //   contactsDispatch(['add', contact])
-    // });
   }
 
-  contacts: Part<'contacts'> = {
-    dispatch(/* a */) { /* this.initState = this.reducer(this.initState, a) */ },
-    reducer: reducers.contacts,
-    initState: initStates.contacts,
-    state: initStates.contacts
-  }
   form: Part<'form'> = {
     dispatch: () => { },
     reducer: reducers.form,
@@ -54,15 +44,18 @@ export class PhoneBook {
   deleteContact(contact: Contact) {
     if (this.form.state === contact)
       this.form.dispatch(['update', { ...contact, id: '' }]);
-    this.contacts.dispatch(['delete', contact]);
+    store.dispatch(deleteContactA(contact));
   }
-  addContact(name: string, number: string): boolean {
-    const id = this.form.state.id;
-    if (this.contacts.state.some(c => c.name === name && c.id !== id)) {
-      return false;
+  addContact(name: string, number: string): AppThunk<boolean> {
+    return (dispatch, getState) => {
+      const contacts = selectContacts(getState())
+      const id = this.form.state.id;
+      if (contacts.some(c => c.name === name && c.id !== id)) {
+        return false;
+      }
+      dispatch(addContactA({ id, name, number }));
+      return true;
     }
-    this.contacts.dispatch(['add', { id, name, number }]);
-    return true;
   }
   updateContact(contact: Contact) {
     this.form.dispatch(['update', contact]);
@@ -74,7 +67,7 @@ export class PhoneBook {
     const formEl = evt.currentTarget;
     const name = formEl.elements.name.value;
     const number = formEl.elements.number.value;
-    if (!this.addContact(name, number)) {
+    if (!store.dispatch(this.addContact(name, number))) {
       alert(`${name} is already in contacts`);
       return;
     }
@@ -93,27 +86,6 @@ export class PhoneBook {
 }
 
 const reducers: Reducers = {
-  contacts(state, action) {
-    switch (action[0]) {
-      case 'delete': {
-        const { id } = action[1];
-        db.contacts.delete(id);
-        return state.filter(c => c.id !== id)
-      }
-      case 'add': {
-        const { id, name, number } = action[1];
-        const newContacts = id
-          ? state.map(c => c.id === id ? { ...c, name, number } : c)
-          : state.concat({ id: nanoid(8), name, number });
-        db.contacts.put(id ? { id, name, number } : newContacts.at(-1)!);
-        return newContacts
-      }
-      case "set":
-        return action[1]
-      default:
-        return state;
-    }
-  },
   form(state, action) {
     switch (action[0]) {
       case 'update':
@@ -126,15 +98,16 @@ const reducers: Reducers = {
   }
 }
 const initStates: States = {
-  contacts: [
-    { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-    { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-    { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-    { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-  ],
   form: {
     name: '',
     number: '',
     id: ''
   }
 }
+
+const defaultContacts: Contact[] = [
+  { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+  { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+  { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+  { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+]
