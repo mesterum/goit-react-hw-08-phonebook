@@ -1,18 +1,18 @@
-import PropTypes from "prop-types";
-// import styled from "styled-components";
+import { useCallback } from "react";
+import { useAppDispatch, useAppSelector } from "../app/hooks";
+import { selectFilter, setFilterA } from "../features/phoneBook/filterSlice";
 
-type Props = { filter: string, setFilter: (filter: string) => void }
+export default function Filter() {
+  const filter = useAppSelector(selectFilter);
+  const dispatch = useAppDispatch();
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    dispatch(setFilterA(e.target.value));
+  }, [dispatch]);
 
-export default function Filter(props: Props) {
   return (
     <label>
       Find contacts by name<br />
-      <input value={props.filter} onChange={e => props.setFilter(e.target.value)} id="search" />
+      <input value={filter} onChange={handleChange} id="search" />
     </label>
   )
 }
-
-Filter.propTypes = {
-  filter: PropTypes.string.isRequired,
-  setFilter: PropTypes.func.isRequired,
-};

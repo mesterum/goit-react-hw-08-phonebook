@@ -2,17 +2,18 @@ import PropTypes from "prop-types";
 import { PhoneBook } from "../PhoneBook";
 import styled from "styled-components";
 import { selectContacts } from "../features/phoneBook/contactsSlice";
+import { selectFilter } from "../features/phoneBook/filterSlice";
 import { useAppSelector } from "../app/hooks";
 
 type Props = {
-  filter: string,
   phoneBook: PhoneBook
 };
 const Number = styled.span`
   font-size: 1.13em;
 `
-export default function ContactList({ filter, phoneBook }: Props) {
+export default function ContactList({ phoneBook }: Props) {
   const contacts = useAppSelector(selectContacts);
+  const filter = useAppSelector(selectFilter);
   const lowerCaseFilter = filter.toLowerCase()
   return (
     <ul>
@@ -28,6 +29,5 @@ export default function ContactList({ filter, phoneBook }: Props) {
 }
 
 ContactList.propTypes = {
-  filter: PropTypes.string.isRequired,
   phoneBook: PropTypes.instanceOf(PhoneBook)
 };
