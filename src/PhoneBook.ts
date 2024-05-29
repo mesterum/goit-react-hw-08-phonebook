@@ -9,7 +9,8 @@ import { addContactA, deleteContactA, selectContacts, setContactsA } from './fea
 export type Contact = {
   id: string,
   name: string,
-  number: string
+  number: string,
+  isDeleting?: true
 }
 type Actions = {
   form: ['update', Contact] | ['reset']
@@ -108,6 +109,6 @@ const initStates: States = {
 const defaultContacts: Contact[] = [
   { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
   { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-  { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+  { id: 'id-3', name: 'Eden Clements', number: '645-17-79', isDeleting: true },
   { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
 ]

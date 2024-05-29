@@ -12,7 +12,7 @@ export default function App() {
   return (
     <div>
       <h2>Phonebook</h2>
-      {<ContactForm phoneBook={phoneBook} />}
+      <ContactForm phoneBook={phoneBook} />
       <h2>Contacts</h2>
       <Filter />
       <ContactList phoneBook={phoneBook} />
