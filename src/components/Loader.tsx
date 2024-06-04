@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { Blocks } from 'react-loader-spinner';
 import { styled } from "styled-components";
 type Props = {
-  hidden: boolean
+  hidden?: boolean
   className?: string
 }
 
