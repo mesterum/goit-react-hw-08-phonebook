@@ -24,20 +24,33 @@ function ContactItem({ className, phoneBook, contact }: Props) {
     updateContact: phoneBook.updateContact.bind(phoneBook, contact)
   }), [phoneBook, contact]);
   return (
-    <li className={className + (contact.isDeleting ? " isDeleting" : "")} hidden={!isVisible}>
-      {contact.name}: <span>{contact.number}</span>
-
-      <button onClick={deleteContact} disabled={contact.isDeleting}>Delete</button>
-      <button onClick={updateContact}>Update</button>
+    <li className={className + (
+      contact.status == 'deleting' ? " isDeleting" :
+        contact.status == 'updating' ? " isUpdating" :
+          !isVisible ? " isHidden" : "")}
+    > <div>
+        {contact.name}: <span>{contact.phone}</span>
+      </div>
+      <div>
+        <button onClick={deleteContact} disabled={contact.status == 'deleting'}>Delete</button>
+        <button onClick={updateContact}>Update</button>
+      </div>
     </li>
   )
 }
 
 
 export default styled(ContactItem)`
+  display: flex;
+  justify-content: space-between;
+&.isHidden {
+  display: none;
+}
 &.isDeleting {
-  // opacity: 0.5;
   text-decoration: line-through;
+}
+&.isUpdating > div:first-child {
+  opacity: 0.5;
 }
 &>span {
   font-size: 1.13em;

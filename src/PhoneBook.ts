@@ -1,16 +1,15 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 
-import { db } from './db';
 import { Form } from "./components/ContactForm";
 import { createRef, useEffect, useReducer } from 'react';
 import { type AppThunk, store } from './app/store';
-import { addContactA, deleteContactA, selectContacts, setContactsA } from './features/phoneBook/contactsSlice';
+import { addContactA, deleteContactA, selectContacts, setContactsA, updateContactA } from './features/phoneBook/contactsSlice';
 
 export type Contact = {
   id: string,
   name: string,
-  number: string,
-  isDeleting?: true
+  phone: string,
+  status?: 'deleting' | 'updating'
 }
 type Actions = {
   form: ['update', Contact] | ['reset']
@@ -31,9 +30,7 @@ export class PhoneBook {
   constructor() {
     this.handleSubmit = this.handleSubmit.bind(this);
 
-    db.contacts.toArray(contacts => {
-      store.dispatch(setContactsA(contacts.length ? contacts : defaultContacts))
-    });
+    store.dispatch(setContactsA())
   }
 
   form: Part<'form'> = {
@@ -51,10 +48,14 @@ export class PhoneBook {
     return (dispatch, getState) => {
       const contacts = selectContacts(getState())
       const id = this.form.state.id;
+      if (id) {
+        dispatch(updateContactA({ id, name, phone: number }));
+        return true;
+      }
       if (contacts.some(c => c.name === name && c.id !== id)) {
         return false;
       }
-      dispatch(addContactA({ id, name, number }));
+      dispatch(addContactA({ name, phone: number }));
       return true;
     }
   }
@@ -101,14 +102,14 @@ const reducers: Reducers = {
 const initStates: States = {
   form: {
     name: '',
-    number: '',
+    phone: '',
     id: ''
   }
 }
 
-const defaultContacts: Contact[] = [
+/* const defaultContacts: Contact[] = [
   { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
   { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
   { id: 'id-3', name: 'Eden Clements', number: '645-17-79', isDeleting: true },
   { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-]
+] */

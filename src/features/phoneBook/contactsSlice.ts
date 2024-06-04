@@ -1,13 +1,19 @@
-import { nanoid } from '@reduxjs/toolkit'
-import type { PayloadAction } from '@reduxjs/toolkit'
+import { Notify } from 'notiflix';
 import type { Contact } from '../../PhoneBook'
-import { db } from '../../db'
 import { createAppSlice } from '../../app/createAppSlice'
+import { contactsAPI } from './contactsAPI'
+import { ReducerCreators } from '@reduxjs/toolkit';
 
 type ContactsState = {
   items: Contact[];
   status: 'idle' | 'fetching' | 'adding'// | ['updating'|'deleting', Contact['id']][] | ['error', message:string]
 }
+const rejected: NonNullable<NonNullable<Parameters<ReducerCreators<ContactsState>['asyncThunk']>[1]>['rejected']>
+  = (state, action) => {
+    state.status = 'idle'
+    Notify.failure(action.error.message!)
+    console.log(action.error);
+  }
 const initialState: ContactsState = {
   items: [],
   status: 'idle'
@@ -19,24 +25,85 @@ export const contactsSlice = createAppSlice({
   // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: create => ({
-    delete: create.reducer(
-      (state, action: PayloadAction<Contact>) => {
-        const { id } = action.payload;
-        db.contacts.delete(id);
-        state.items = state.items.filter(c => c.id !== id);
-      }),
-    add(state, action: PayloadAction<Contact>) {
-      const { id, name, number } = action.payload;
-      const { items } = state;
-      const newContacts = id
-        ? items.map(c => c.id === id ? { ...c, name, number } : c)
-        : items.concat({ id: nanoid(8), name, number });
-      db.contacts.put(id ? { id, name, number } : newContacts.at(-1)!);
-      state.items = newContacts
-    },
-    set(state, action: PayloadAction<Contact[]>) {
-      state.items = action.payload;
-    },
+    fetchContacts: create.asyncThunk(
+      async () => {
+        const response = await contactsAPI.get('/')
+        return response.data as ResponseContact[]
+      },
+      {
+        pending: state => {
+          state.status = "fetching"
+        },
+        fulfilled: (state, action) => {
+          state.status = "idle"
+          state.items = action.payload
+        },
+        rejected
+      },
+    ),
+    addContact: create.asyncThunk(
+      async ({ name, phone }: Pick<Contact, 'name' | 'phone'>) => {
+        const postResponse = (await contactsAPI.post('/')).data as ResponseContact
+        const response = await contactsAPI.put(postResponse.id, { name, phone })
+        return response.data as ResponseContact
+      },
+      {
+        pending: state => {
+          state.status = "adding"
+        },
+        fulfilled: (state, action) => {
+          state.status = "idle"
+          state.items.push(action.payload)
+        },
+        rejected
+      },
+    ),
+    updateContact: create.asyncThunk(
+      async ({ id, name, phone }: Contact) => {
+        const response = await contactsAPI.put(id, { name, phone })
+        return response.data as ResponseContact
+      },
+      {
+        pending: (state, { meta: { arg: { id } } }) => {
+          state.status = "idle"
+          const contact = state.items.find(c => c.id === id)!
+          contact.status = 'updating'
+        },
+        fulfilled: (state, { payload: { id, name, phone } }) => {
+          const contact = state.items.find(c => c.id === id)!
+          contact.name = name
+          contact.phone = phone
+          contact.status = undefined
+        },
+        rejected
+      },
+    ),
+    deleteContact: create.asyncThunk(
+      async ({ id }: Pick<Contact, 'id'>) => {
+        try {
+          const response = await contactsAPI.delete(id)
+          return response.data as ResponseContact
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (error: any) {
+          if (error.message === 'Failed to fetch') return { id, name: null }
+          // console.log(error);
+          throw error;
+        }
+      },
+      {
+        pending: (state, { meta: { arg: { id } } }) => {
+          state.status = "idle"
+          const contact = state.items.find(c => c.id === id)!
+          contact.status = 'deleting'
+        },
+        fulfilled: (state, { payload: { id, name } }) => {
+          const contact = state.items.findIndex(c => c.id === id)!
+          if (name === null) state.items[contact].status = undefined
+          else state.items.splice(contact, 1)
+        },
+        rejected
+      },
+    ),
   }),
   selectors: {
     selectContacts: contacts => contacts.items,
@@ -44,7 +111,7 @@ export const contactsSlice = createAppSlice({
   },
 })
 
-export const { delete: deleteContactA, add: addContactA, set: setContactsA } = contactsSlice.actions
+export const { deleteContact: deleteContactA, updateContact: updateContactA, addContact: addContactA, fetchContacts: setContactsA } = contactsSlice.actions
 
 export const { selectContacts, selectStatus } = contactsSlice.selectors
 
@@ -56,3 +123,9 @@ fetchContacts - obținerea un array de contacte (metoda GET) prin cerere. Action
 addContact - adăugarea unui contact (metoda POST). Action type "contacts/addContact".
 deleteContact - ștergerea unui contact (metoda DELETE). Action type "contacts/deleteContact".
  */
+type ResponseContact = {
+  createdAt: number;
+  name: string;
+  phone: string;
+  id: string;
+}
