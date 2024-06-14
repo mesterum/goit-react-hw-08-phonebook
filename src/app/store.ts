@@ -2,11 +2,13 @@ import { configureStore, createSelector } from '@reduxjs/toolkit'
 import type { Action, ThunkAction } from '@reduxjs/toolkit'
 import { default as contacts } from '../features/phoneBook/contactsSlice'
 import { default as filter } from '../features/phoneBook/filterSlice'
+import { default as auth } from '../features/auth/authSlice'
 
 export const store = configureStore({
   reducer: {
     contacts,
     filter,
+    auth,
   },
 })
 
