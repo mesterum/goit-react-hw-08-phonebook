@@ -1,9 +1,10 @@
 // import axios from "redaxios"
 import { Notify } from 'notiflix';
 import { createAppSlice } from '../../app/createAppSlice'
-import { authAPI } from './authAPI'
+import { authAPI, clearAuthHeader, setAuthHeader } from './authAPI'
 import { ReducerCreators } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 
 type AuthState = {
   user: {
@@ -26,19 +27,6 @@ const rejected: NonNullable<NonNullable<Parameters<ReducerCreators<AuthState>['a
     Notify.failure(action.error.message!)
     console.log(action.error);
   }
-
-/* axios.defaults.baseURL = 'https://connections-api.herokuapp.com/';
-axios.defaults.headers = { Authorization: '' } as const;
-
-// Utility to add JWT
-const setAuthHeader = (token: string) => {
-  axios.defaults.headers!.Authorization = `Bearer ${token}`;
-};
-
-// Utility to remove JWT
-const clearAuthHeader = () => {
-  axios.defaults.headers.common.Authorization = '';
-}; */
 
 const initialState: AuthState = {
   user: null,
@@ -65,8 +53,9 @@ export const authSlice = createAppSlice({
 
         try {
           // If there is a token, add it to the HTTP header and perform the request
-          // setAuthHeader(persistedToken);
-          const res = await authAPI.get('current');
+          setAuthHeader(persistedToken);
+
+          const res: Response<LoginResponse["user"]> = await authAPI.get('current');
           return res.data;
         } catch (error) {
           return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
@@ -92,7 +81,7 @@ export const authSlice = createAppSlice({
         try {
           const res = await authAPI.post('signup', credentials);
           // After successful registration, add the token to the HTTP header
-          // setAuthHeader(res.data.token);
+          setAuthHeader(res.data.token);
           return res.data as LoginResponse;
         } catch (error) {
           return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
@@ -108,12 +97,12 @@ export const authSlice = createAppSlice({
       }
     ),
     login: create.asyncThunk(
-      async (credentials: LoginResponse['user'], thunkAPI) => {
+      async (credentials: Record<'email' | 'password', string>, thunkAPI) => {
         try {
-          const res = await authAPI.post('login', credentials);
+          const res: Response<LoginResponse> = await authAPI.post('login', credentials);
           // After successful login, add the token to the HTTP header
-          // setAuthHeader(res.data.token);
-          return res.data as LoginResponse;
+          setAuthHeader(res.data.token);
+          return res.data;
         } catch (error) {
           return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
         }
@@ -131,7 +120,7 @@ export const authSlice = createAppSlice({
       try {
         await authAPI.post('logout');
         // After a successful logout, remove the token from the HTTP header
-        // clearAuthHeader();
+        clearAuthHeader();
       } catch (error) {
         return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
       }
@@ -154,6 +143,33 @@ export const authSlice = createAppSlice({
 export const { login, logout, register, refresh } = authSlice.actions
 
 export const { selectIsLoggedIn, selectUser } = authSlice.selectors
+export const selectAuth = authSlice.selectSlice
+export const useAuth = () => {
+  const auth = useAppSelector(selectAuth)
+  const dispatch = useAppDispatch()
+  if (!auth.isLoggedIn && !auth.isRefreshing && auth.token) {
+    dispatch(refresh())
+  }
+  return auth
+}
 
-export default authSlice.reducer
+startAppListening({
+  type: REHYDRATE,
+  effect(action, listenerApi) {
+    console.log('action', action);
+    console.log('listenerApi', listenerApi);
+  }
+})
 
+
+import { persistReducer, REHYDRATE, type PersistConfig } from 'redux-persist'
+import storage from 'redux-persist/lib/storage';
+import { Response } from 'redaxios';
+import { startAppListening } from '../../app/listenerMiddleware';
+// Persisting token field from auth slice to localstorage
+const authPersistConfig: PersistConfig<AuthState> = {
+  key: 'auth',
+  storage,
+  whitelist: ['token'],
+};
+export default persistReducer(authPersistConfig, authSlice.reducer)

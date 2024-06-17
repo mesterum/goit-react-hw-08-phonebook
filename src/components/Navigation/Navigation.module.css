@@ -1,0 +1,16 @@
+.link {
+  display: inline-block;
+  text-decoration: none;
+  padding: 12px;
+  font-weight: 700;
+  color: #e84a5f;
+}
+/* https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions */
+.link:global(.active) {
+  color: #747bff;
+}
+@media (prefers-color-scheme: light) {
+  .link {
+    color: #2a363b;
+  }
+}
