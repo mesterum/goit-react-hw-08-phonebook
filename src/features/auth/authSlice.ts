@@ -1,20 +1,24 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // import axios from "redaxios"
 import { Notify } from 'notiflix';
 import { createAppSlice } from '../../app/createAppSlice'
 import { authAPI, clearAuthHeader, setAuthHeader } from './authAPI'
-import { ReducerCreators } from '@reduxjs/toolkit';
-import { RootState } from '../../app/store';
-import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { Action, PayloadAction, ReducerCreators } from '@reduxjs/toolkit';
+import { store } from '../../app/store';
+import { useAppSelector } from '../../app/hooks';
 
-type AuthState = {
-  user: {
-    name: string;
-    email: string;
-  } | null;
-  token: string | null;
-  isLoggedIn: boolean;
+type User<LoggedIn extends boolean = boolean> = LoggedIn extends true ? {
+  name: string;
+  email: string;
+} : null
+type AuthStateGen<LoggedIn extends boolean = boolean> = {
+  readonly isLoggedIn: LoggedIn;
+  readonly user: User<LoggedIn>;
+  token: string | (LoggedIn extends false ? null : never);
   isRefreshing: boolean;
 }
+type AuthState = AuthStateGen<true> | AuthStateGen<false>
+// const t: PromiseWithResolvers<any> = Promise.withResolvers()
 type LoginResponse = {
   token: string;
   user: {
@@ -22,18 +26,23 @@ type LoginResponse = {
     email: string;
   };
 }
+type RefreshToken = {
+  token: string | null;
+  resolve: (value: boolean | PromiseLike<boolean>) => void;
+}
 const rejected: NonNullable<NonNullable<Parameters<ReducerCreators<AuthState>['asyncThunk']>[1]>['rejected']>
   = (_state, action) => {
-    Notify.failure(action.error.message!)
-    console.log(action.error);
+    // console.log(action.error);
+    if (action.error.message)
+      Notify.failure(action.error.message)
   }
 
-const initialState: AuthState = {
+const initialState = {
   user: null,
   token: null,
   isLoggedIn: false,
-  isRefreshing: false,
-};
+  isRefreshing: true,
+} as AuthState;
 
 export const authSlice = createAppSlice({
   name: 'auth',
@@ -41,50 +50,49 @@ export const authSlice = createAppSlice({
   initialState,
   reducers: create => ({
     refresh: create.asyncThunk(
-      async (_, thunkAPI) => {
-        // Reading the token from the state via getState()
-        const { auth } = thunkAPI.getState() as RootState;
-        const persistedToken = auth.token;
-
-        if (persistedToken === null) {
-          // If there is no token, exit without performing any request
-          return thunkAPI.rejectWithValue('Unable to fetch user');
-        }
+      async (refreshToken: RefreshToken) => {
+        const persistedToken = refreshToken.token;
 
         try {
+          if (persistedToken == null) {
+            // If there is no token, exit without performing any request
+            throw new Error(''); //No token to refresh
+          }
           // If there is a token, add it to the HTTP header and perform the request
           setAuthHeader(persistedToken);
-
           const res: Response<LoginResponse["user"]> = await authAPI.get('current');
+          refreshToken.resolve(true)
           return res.data;
-        } catch (error) {
-          return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
+        } catch (error: any) {
+          refreshToken.resolve(false)
+          // return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
+          throw error.data ?? error;
         }
       },
       {
         fulfilled: (state, action) => {
           state.user = action.payload;
           state.isLoggedIn = true;
-          state.isRefreshing = false;
         },
         pending: (state) => {
           state.isRefreshing = true;
         },
-        rejected: (state, action) => {
+        rejected,
+        settled: (state) => {
           state.isRefreshing = false;
-          rejected(state, action);
         },
       }
     ),
     register: create.asyncThunk(
-      async (credentials: Record<'name' | 'email' | 'password', string>, thunkAPI) => {
+      async (credentials: Record<'name' | 'email' | 'password', string>) => {
         try {
           const res = await authAPI.post('signup', credentials);
           // After successful registration, add the token to the HTTP header
           setAuthHeader(res.data.token);
           return res.data as LoginResponse;
-        } catch (error) {
-          return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
+        } catch (error: any) {
+          // return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
+          throw error.data ?? error;
         }
       },
       {
@@ -97,14 +105,15 @@ export const authSlice = createAppSlice({
       }
     ),
     login: create.asyncThunk(
-      async (credentials: Record<'email' | 'password', string>, thunkAPI) => {
+      async (credentials: Record<'email' | 'password', string>) => {
         try {
           const res: Response<LoginResponse> = await authAPI.post('login', credentials);
           // After successful login, add the token to the HTTP header
           setAuthHeader(res.data.token);
           return res.data;
-        } catch (error) {
-          return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
+        } catch (error: any) {
+          // return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
+          throw error.data ?? error;
         }
       },
       {
@@ -116,13 +125,16 @@ export const authSlice = createAppSlice({
         rejected: rejected,
       }
     ),
-    logout: create.asyncThunk(async (_, thunkAPI) => {
+    logout: create.asyncThunk(async () => {
       try {
         await authAPI.post('logout');
+        // logging?.resolve(false);
         // After a successful logout, remove the token from the HTTP header
         clearAuthHeader();
-      } catch (error) {
-        return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
+      } catch (error: any) {
+        // logging?.resolve(true);
+        // return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
+        throw error.data ?? error;
       }
     },
       {
@@ -131,7 +143,13 @@ export const authSlice = createAppSlice({
           state.token = null;
           state.isLoggedIn = false;
         },
-        rejected: rejected,
+        pending: (state) => {
+          state.isRefreshing = true;
+        },
+        rejected,
+        settled: (state) => {
+          state.isRefreshing = false;
+        },
       }),
   }),
   selectors: {
@@ -144,22 +162,45 @@ export const { login, logout, register, refresh } = authSlice.actions
 
 export const { selectIsLoggedIn, selectUser } = authSlice.selectors
 export const selectAuth = authSlice.selectSlice
-export const useAuth = () => {
-  const auth = useAppSelector(selectAuth)
-  const dispatch = useAppDispatch()
-  if (!auth.isLoggedIn && !auth.isRefreshing && auth.token) {
-    dispatch(refresh())
-  }
-  return auth
-}
+export const useAuth = () => useAppSelector(selectAuth)
 
 startAppListening({
   type: REHYDRATE,
-  effect(action, listenerApi) {
-    console.log('action', action);
-    console.log('listenerApi', listenerApi);
+  effect(_action, listenerApi) {
+    const action = _action as Action<typeof REHYDRATE> & {
+      key: string;
+    } & PayloadAction<{
+      token: string | null;
+    }>;
+    if (action.key !== 'auth') return;
+    if (!logging) isLoggedIn()
+    if (!logging) return
+    listenerApi.dispatch(refresh({ token: action.payload.token, resolve: logging.resolve }))
+
+    // console.log('action', action);
+    // console.log('listenerApi', listenerApi);
   }
 })
+
+let logging: PromiseWithResolvers<boolean> | null = null;
+export async function isLoggedIn(): Promise<boolean> {
+  const auth = selectAuth(store.getState())
+  if (!auth.isRefreshing) return auth.isLoggedIn
+  if (logging) return logging.promise
+  const loggingIn = Promise.withResolvers<boolean>()
+  logging = loggingIn;
+  (async () => {
+    await loggingIn.promise;
+    logging = null;
+  })()
+  return loggingIn.promise
+}/* 
+export function loggingOut() {
+  const loggingOut = Promise.withResolvers<boolean>()
+  logging = loggingOut;
+  store.dispatch(logout())
+  return loggingOut.promise
+} */
 
 
 import { persistReducer, REHYDRATE, type PersistConfig } from 'redux-persist'

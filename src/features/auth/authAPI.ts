@@ -1,6 +1,7 @@
 import axios from "redaxios"
 
-const headers = {
+// mutable headers
+export const headers = {
   'Content-Type': 'application/json',
   'Accept': 'application/json',
   'Authorization': ''
@@ -12,12 +13,12 @@ export const authAPI = axios.create({
 
 // Utility to add JWT
 export const setAuthHeader = (token: string) => {
-  (authAPI.defaults.headers as typeof headers).Authorization = `Bearer ${token}`;
+  headers.Authorization = `Bearer ${token}`;
 };
 
 // Utility to remove JWT
 export const clearAuthHeader = () => {
-  (authAPI.defaults.headers as typeof headers).Authorization = '';
+  headers.Authorization = '';
 };
 
 /* 

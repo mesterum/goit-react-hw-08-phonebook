@@ -10,6 +10,11 @@ import { PersistGate } from 'redux-persist/integration/react'
 import { HelmetProvider } from 'react-helmet-async'
 
 const router = createBrowserRouter(routes, { basename: import.meta.env.DEV ? '/' : '/goit-react-hw-08-movies/' });
+/* router.subscribe((state) => {
+  if (state.navigation.state === 'idle') return
+  console.log(state)
+  console.log(state.location.pathname, state.navigation.location.pathname)
+}) */
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
