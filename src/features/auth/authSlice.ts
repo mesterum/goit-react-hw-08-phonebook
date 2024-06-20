@@ -28,7 +28,6 @@ type LoginResponse = {
 }
 type RefreshToken = {
   token: string | null;
-  resolve: (value: boolean | PromiseLike<boolean>) => void;
 }
 const rejected: NonNullable<NonNullable<Parameters<ReducerCreators<AuthState>['asyncThunk']>[1]>['rejected']>
   = (_state, action) => {
@@ -61,10 +60,8 @@ export const authSlice = createAppSlice({
           // If there is a token, add it to the HTTP header and perform the request
           setAuthHeader(persistedToken);
           const res: Response<LoginResponse["user"]> = await authAPI.get('current');
-          refreshToken.resolve(true)
           return res.data;
         } catch (error: any) {
-          refreshToken.resolve(false)
           // return thunkAPI.rejectWithValue(error instanceof Error ? error.message : error + '');
           throw error.data ?? error;
         }
@@ -166,34 +163,25 @@ export const useAuth = () => useAppSelector(selectAuth)
 
 startAppListening({
   type: REHYDRATE,
-  effect(_action, listenerApi) {
+  async effect(_action, listenerApi) {
     const action = _action as Action<typeof REHYDRATE> & {
       key: string;
     } & PayloadAction<{
       token: string | null;
     }>;
     if (action.key !== 'auth') return;
-    if (!logging) isLoggedIn()
-    if (!logging) return
-    listenerApi.dispatch(refresh({ token: action.payload.token, resolve: logging.resolve }))
-
-    // console.log('action', action);
-    // console.log('listenerApi', listenerApi);
+    // logging ??= Promise.withResolvers<boolean>()
+    await listenerApi.dispatch(refresh(action.payload))
+    logging.resolve(await isLoggedIn())
+    // logging = null;
   }
 })
 
-let logging: PromiseWithResolvers<boolean> | null = null;
+const logging = Promise.withResolvers<boolean>();
 export async function isLoggedIn(): Promise<boolean> {
   const auth = selectAuth(store.getState())
   if (!auth.isRefreshing) return auth.isLoggedIn
-  if (logging) return logging.promise
-  const loggingIn = Promise.withResolvers<boolean>()
-  logging = loggingIn;
-  (async () => {
-    await loggingIn.promise;
-    logging = null;
-  })()
-  return loggingIn.promise
+  return logging.promise
 }/* 
 export function loggingOut() {
   const loggingOut = Promise.withResolvers<boolean>()
