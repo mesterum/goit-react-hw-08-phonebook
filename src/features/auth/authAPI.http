@@ -1,12 +1,15 @@
-GET https://connections-api.herokuapp.com/contacts
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjUyYjg4OTkwZTBiODAwMTQwMjQwNzUiLCJpYXQiOjE3MTY4MzIwNDl9.GGw2AGQGGCoF1oGydj3wVNjn5c-csfw8UwIUgtabbTs
+GET https://connections-api.goit.global/contacts
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjUyYjg4OTkwZTBiODAwMTQwMjQwNzUiLCJpYXQiOjE3MjI1MDE2Njd9.FwqLRKH70WePjPDQPed6bkZTg9EpQBb6fuYCFHQpGVw
 
-# {
-#   "message": "Please authenticate"
-# }
+# [
+#   {
+#     "id": "66aa0a6bc495ed6e25f311a6",
+#     "name": "Wendy Mertz",
+#     "number": "325-653-6694"
+#   }
+# ]
 ###
-
-POST https://connections-api.herokuapp.com/users/login
+POST https://connections-api.goit.global/users/login
 Content-Type: application/json
 
 {
@@ -19,15 +22,24 @@ Content-Type: application/json
 #     "name": "Adrian Cross",
 #     "email": "a.cross1@gmail.com"
 #   },
-#   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjUyYjg4OTkwZTBiODAwMTQwMjQwNzUiLCJpYXQiOjE3MTgzNTI3NDR9.g7rCwDtGEy9eTAhDzRjY5-oQo5E1aqF4UFBpZYlNXgs"
+#   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjUyYjg4OTkwZTBiODAwMTQwMjQwNzUiLCJpYXQiOjE3MjI1MDE2Njd9.FwqLRKH70WePjPDQPed6bkZTg9EpQBb6fuYCFHQpGVw"
 # }
 ###
 
-GET https://connections-api.herokuapp.com/users/current
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjUyYjg4OTkwZTBiODAwMTQwMjQwNzUiLCJpYXQiOjE3MTgzNTI3NDR9.g7rCwDtGEy9eTAhDzRjY5-oQo5E1aqF4UFBpZYlNXgs
+GET https://connections-api.goit.global/users/current
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjUyYjg4OTkwZTBiODAwMTQwMjQwNzUiLCJpYXQiOjE3MjI1MDE2Njd9.FwqLRKH70WePjPDQPed6bkZTg9EpQBb6fuYCFHQpGVw
 
 # {
 #   "name": "Adrian Cross",
 #   "email": "a.cross1@gmail.com"
 # }
+###
+POST https://connections-api.goit.global/contacts
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjUyYjg4OTkwZTBiODAwMTQwMjQwNzUiLCJpYXQiOjE3MjI1MDE2Njd9.FwqLRKH70WePjPDQPed6bkZTg9EpQBb6fuYCFHQpGVw
+Content-Type: application/json
+
+{
+  "name": "Wendy Mertz1",
+  "number": "325-653-6694"
+}
 ###

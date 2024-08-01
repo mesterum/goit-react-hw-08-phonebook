@@ -7,7 +7,7 @@ export const headers = {
   'Authorization': ''
 }
 export const authAPI = axios.create({
-  baseURL: 'https://connections-api.herokuapp.com/users',
+  baseURL: 'https://connections-api.goit.global/users',
   headers
 })
 

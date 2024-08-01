@@ -8,7 +8,7 @@ import { addContactA, deleteContactA, selectContacts, setContactsA, updateContac
 export type Contact = {
   id: string,
   name: string,
-  phone: string,
+  number: string,
   status?: 'deleting' | 'updating'
 }
 type Actions = {
@@ -49,13 +49,13 @@ export class PhoneBook {
       const contacts = selectContacts(getState())
       const id = this.form.state.id;
       if (id) {
-        dispatch(updateContactA({ id, name, phone: number }));
+        dispatch(updateContactA({ id, name, number: number }));
         return true;
       }
       if (contacts.some(c => c.name === name && c.id !== id)) {
         return false;
       }
-      dispatch(addContactA({ name, phone: number }));
+      dispatch(addContactA({ name, number: number }));
       return true;
     }
   }
@@ -102,7 +102,7 @@ const reducers: Reducers = {
 const initStates: States = {
   form: {
     name: '',
-    phone: '',
+    number: '',
     id: ''
   }
 }

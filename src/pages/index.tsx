@@ -38,8 +38,9 @@ const routes: RouteObject[] = [
   }, {
     path: "/logout",
     async action() {
-      await store.dispatch(logout());
-      return redirect("/");
+      const resultAction = await store.dispatch(logout());
+      if (logout.fulfilled.match(resultAction))
+        return redirect("/");
     },
   },
 ]
