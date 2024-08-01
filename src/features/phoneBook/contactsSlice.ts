@@ -42,10 +42,9 @@ export const contactsSlice = createAppSlice({
       },
     ),
     addContact: create.asyncThunk(
-      async ({ name, phone }: Pick<Contact, 'name' | 'phone'>) => {
-        const postResponse = (await contactsAPI.post('/')).data as ResponseContact
-        const response = await contactsAPI.put(postResponse.id, { name, phone })
-        return response.data as ResponseContact
+      async ({ name, number: number }: Pick<Contact, 'name' | 'number'>) => {
+        const response = (await contactsAPI.post('', { name, number })).data as ResponseContact
+        return response
       },
       {
         pending: state => {
@@ -59,8 +58,8 @@ export const contactsSlice = createAppSlice({
       },
     ),
     updateContact: create.asyncThunk(
-      async ({ id, name, phone }: Contact) => {
-        const response = await contactsAPI.put(id, { name, phone })
+      async ({ id, name, number: number }: Contact) => {
+        const response = await contactsAPI.patch(id, { name, number })
         return response.data as ResponseContact
       },
       {
@@ -69,10 +68,10 @@ export const contactsSlice = createAppSlice({
           const contact = state.items.find(c => c.id === id)!
           contact.status = 'updating'
         },
-        fulfilled: (state, { payload: { id, name, phone } }) => {
+        fulfilled: (state, { payload: { id, name, number: number } }) => {
           const contact = state.items.find(c => c.id === id)!
           contact.name = name
-          contact.phone = phone
+          contact.number = number
           contact.status = undefined
         },
         rejected
@@ -124,8 +123,8 @@ addContact - adăugarea unui contact (metoda POST). Action type "contacts/addCon
 deleteContact - ștergerea unui contact (metoda DELETE). Action type "contacts/deleteContact".
  */
 type ResponseContact = {
-  createdAt: number;
+  // createdAt: number;
   name: string;
-  phone: string;
+  number: string;
   id: string;
 }

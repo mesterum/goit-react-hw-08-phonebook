@@ -29,7 +29,7 @@ function ContactItem({ className, phoneBook, contact }: Props) {
         contact.status == 'updating' ? " isUpdating" :
           !isVisible ? " isHidden" : "")}
     > <div>
-        {contact.name}: <span>{contact.phone}</span>
+        {contact.name}: <span>{contact.number}</span>
       </div>
       <div>
         <button onClick={deleteContact} disabled={contact.status == 'deleting'}>Delete</button>
