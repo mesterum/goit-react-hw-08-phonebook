@@ -171,7 +171,8 @@ startAppListening({
     }>;
     if (action.key !== 'auth') return;
     // logging ??= Promise.withResolvers<boolean>()
-    await listenerApi.dispatch(refresh(action.payload))
+    if (action.payload)
+      await listenerApi.dispatch(refresh(action.payload))
     logging.resolve(await isLoggedIn())
     // logging = null;
   }

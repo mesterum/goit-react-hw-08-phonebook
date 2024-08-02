@@ -9,7 +9,7 @@ import Loader from './components/Loader'
 import { PersistGate } from 'redux-persist/integration/react'
 import { HelmetProvider } from 'react-helmet-async'
 
-const router = createBrowserRouter(routes, { basename: import.meta.env.DEV ? '/' : '/goit-react-hw-08-movies/' });
+const router = createBrowserRouter(routes, { basename: import.meta.env.DEV ? '/' : '/goit-react-hw-08-phonebook/' });
 /* router.subscribe((state) => {
   if (state.navigation.state === 'idle') return
   console.log(state)
